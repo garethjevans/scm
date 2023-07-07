@@ -1,0 +1,17 @@
+---
+apiVersion: tekton.dev/v1 # or tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  generateName: scm-
+spec:
+  params:
+    - name: message
+      value: "hello world!"
+  taskSpec:
+    steps:
+    - name: default
+      image: golang:1.20-alpine
+      script: |
+        go install github.com/garethjevans/scm
+
+        scm --help
