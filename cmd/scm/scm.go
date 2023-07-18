@@ -66,7 +66,7 @@ func init() {
 		return &FlagError{Err: err}
 	})
 
-	RootCmd.AddCommand(cmd.NewUrlCmd())
+	RootCmd.AddCommand(cmd.NewURLCmd())
 	RootCmd.AddCommand(cmd.NewTokenCmd())
 
 	RootCmd.PersistentPreRun = func(command *cobra.Command, args []string) {
@@ -102,7 +102,7 @@ var RootCmd = &cobra.Command{
 	Long:  `a CLI used to interact with different scm providers`,
 
 	SilenceErrors: false,
-	SilenceUsage:  false,
+	SilenceUsage:  true,
 }
 
 var versionCmd = &cobra.Command{
