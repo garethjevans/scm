@@ -12,11 +12,22 @@ spec:
     - name: default
       image: golang:1.20-alpine
       script: |
+        echo "displaying credentials"
         cat $(credentials.path)/.git-credentials
-        
-        go install github.com/garethjevans/scm@latest
+        echo ""
 
+        echo "installing scm"
+        go install github.com/garethjevans/scm/cmd/scm@main
+        echo ""
+
+        echo "displaying help"
         scm --help
-        
-        scm credentials validate --host https://github.com --owner garethjevans --repo 
+        echo ""
+       
+        echo "calculating url" 
+        scm url --host https://github.com --owner garethjevans --repo scm
+        echo ""
+
+        echo "determining token"
+        scm token --host https://github.com --path $(credentials.path)/.git-credentials
 
