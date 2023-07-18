@@ -49,6 +49,18 @@ https://user:other@gitlab.com/`,
 			expectedErr:        true,
 			expectedErrMessage: "Error: unable to locate a token for https://github.com",
 		},
+		{
+			credentials: `https://user:token@gitlab.com/
+https://user:other@gitlab.com/org/repo`,
+			host:     "https://gitlab.com",
+			expected: "token",
+		},
+		{
+			credentials: `https://user:other@gitlab.com/org/repo
+https://user:token@gitlab.com/`,
+			host:     "https://gitlab.com",
+			expected: "other",
+		},
 	}
 
 	u := cmd.NewTokenCmd()
@@ -62,14 +74,12 @@ https://user:other@gitlab.com/`,
 
 			// Example writing to the file
 			text := []byte(tc.credentials)
-			if _, err = file.Write(text); err != nil {
-				assert.NoError(t, err)
-			}
 
-			// Close the file
-			if err := file.Close(); err != nil {
-				assert.NoError(t, err)
-			}
+			_, err = file.Write(text)
+			assert.NoError(t, err)
+
+			err = file.Close()
+			assert.NoError(t, err)
 
 			cmd.Path = file.Name()
 			cmd.Host = tc.host

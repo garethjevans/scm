@@ -20,11 +20,7 @@ func NewURLCmd() *cobra.Command {
 		Example: "scm url --host=https://github.com --owner=garethjevans --repo=my-repo",
 		Aliases: []string{"u"},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if isAzureDevops(Kind, Host) {
-				fmt.Fprintf(cmd.OutOrStdout(), "%s/%s/_git/%s", strings.TrimSuffix(Host, "/"), Owner, Repo)
-			} else {
-				fmt.Fprintf(cmd.OutOrStdout(), "%s/%s/%s", strings.TrimSuffix(Host, "/"), Owner, Repo)
-			}
+			fmt.Fprint(cmd.OutOrStdout(), GetURL(Kind, Host, Owner, Repo))
 			return nil
 		},
 		Args:         cobra.NoArgs,
@@ -37,6 +33,14 @@ func NewURLCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&Kind, "kind", "k", "", "The kind of the scm provider")
 
 	return cmd
+}
+
+func GetURL(kind string, host string, owner string, repo string) string {
+	if isAzureDevops(kind, host) {
+		return fmt.Sprintf("%s/%s/_git/%s", strings.TrimSuffix(host, "/"), owner, repo)
+	}
+
+	return fmt.Sprintf("%s/%s/%s", strings.TrimSuffix(host, "/"), owner, repo)
 }
 
 func isAzureDevops(kind string, host string) bool {

@@ -122,4 +122,4 @@ docs: build
 	./build/scm docs
 
 lint:
-	golangci-lint run
+	golangci-lint run --fix
