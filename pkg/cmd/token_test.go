@@ -2,12 +2,13 @@ package cmd_test
 
 import (
 	"bytes"
-	"github.com/garethjevans/scm/pkg/cmd"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/garethjevans/scm/pkg/cmd"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTokenCmd_Run(t *testing.T) {

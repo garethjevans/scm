@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/spf13/cobra"
 )
 
 // $ scm url --host=https://github.com --owner=garethjevans --repo=my-repo
@@ -35,7 +36,7 @@ func NewTokenCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			fmt.Fprintf(cmd.OutOrStdout(), token)
+			fmt.Fprint(cmd.OutOrStdout(), token)
 			return nil
 		},
 		Args:         cobra.NoArgs,
@@ -70,7 +71,6 @@ func DetermineToken(credentials string, host string) (string, error) {
 					return password, nil
 				}
 			}
-
 		} else {
 			// get the first in the list if no host is specified
 			password, ok := u.User.Password()

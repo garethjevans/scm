@@ -66,7 +66,7 @@ func init() {
 		return &FlagError{Err: err}
 	})
 
-	RootCmd.AddCommand(cmd.NewUrlCmd())
+	RootCmd.AddCommand(cmd.NewURLCmd())
 	RootCmd.AddCommand(cmd.NewTokenCmd())
 
 	RootCmd.PersistentPreRun = func(command *cobra.Command, args []string) {

@@ -2,22 +2,17 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
 	"strings"
-)
 
-// $ scm url --host=https://github.com --owner=garethjevans --repo=my-repo
-//https://github.com/garethjevans/my-repo
-//
-//$ scm url --host=https://dev.azure.com --owner=garethjevans --repo=my-repo
-//https://dev.azure.com/garethjevans/_git/my-repo
+	"github.com/spf13/cobra"
+)
 
 var (
 	Kind string
 )
 
-// NewUrlCmd creates a new cluster command.
-func NewUrlCmd() *cobra.Command {
+// NewURLCmd creates a new cluster command.
+func NewURLCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "url",
 		Short:   "Calculates the url for an scm provider",

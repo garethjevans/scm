@@ -2,10 +2,11 @@ package cmd_test
 
 import (
 	"bytes"
-	"github.com/garethjevans/scm/pkg/cmd"
-	"github.com/stretchr/testify/assert"
 	"io"
 	"testing"
+
+	"github.com/garethjevans/scm/pkg/cmd"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUrlCmd_Run(t *testing.T) {
@@ -53,7 +54,7 @@ func TestUrlCmd_Run(t *testing.T) {
 		},
 	}
 
-	u := cmd.NewUrlCmd()
+	u := cmd.NewURLCmd()
 
 	for _, tc := range tests {
 		t.Run(tc.expected, func(t *testing.T) {
