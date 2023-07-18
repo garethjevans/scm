@@ -22,7 +22,7 @@ jobs:
         run: make build
 
       - name: Docs
-        run: ./build/inspect docs
+        run: ./build/scm docs
 
       - name: Create Pull Request
         id: cpr
