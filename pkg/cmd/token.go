@@ -38,7 +38,8 @@ func NewTokenCmd() *cobra.Command {
 			fmt.Fprintf(cmd.OutOrStdout(), token)
 			return nil
 		},
-		Args: cobra.NoArgs,
+		Args:         cobra.NoArgs,
+		SilenceUsage: true,
 	}
 
 	cmd.Flags().StringVarP(&Host, "host", "", "", "The host of the scm provider, including scheme")
@@ -80,5 +81,5 @@ func DetermineToken(credentials string, host string) (string, error) {
 		}
 	}
 
-	return "", nil
+	return "", fmt.Errorf("unable to locate a token for %s", host)
 }

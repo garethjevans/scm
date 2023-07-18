@@ -13,10 +13,7 @@ import (
 //https://dev.azure.com/garethjevans/_git/my-repo
 
 var (
-	Host  string
-	Owner string
-	Repo  string
-	Kind  string
+	Kind string
 )
 
 // NewUrlCmd creates a new cluster command.
@@ -35,7 +32,8 @@ func NewUrlCmd() *cobra.Command {
 			}
 			return nil
 		},
-		Args: cobra.NoArgs,
+		Args:         cobra.NoArgs,
+		SilenceUsage: true,
 	}
 
 	cmd.Flags().StringVarP(&Host, "host", "", "", "The host of the scm provider, including scheme")

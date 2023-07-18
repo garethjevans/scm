@@ -102,7 +102,7 @@ var RootCmd = &cobra.Command{
 	Long:  `a CLI used to interact with different scm providers`,
 
 	SilenceErrors: false,
-	SilenceUsage:  false,
+	SilenceUsage:  true,
 }
 
 var versionCmd = &cobra.Command{

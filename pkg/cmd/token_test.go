@@ -6,14 +6,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"io"
 	"os"
+	"strings"
 	"testing"
 )
 
 func TestTokenCmd_Run(t *testing.T) {
 	tests := []struct {
-		credentials string
-		host        string
-		expected    string
+		credentials        string
+		host               string
+		expected           string
+		expectedErrMessage string
+		expectedErr        bool
 	}{
 		{
 			credentials: `https://user:token@github.com/`,
@@ -37,6 +40,13 @@ https://user:other@gitlab.com/`,
 https://user:other@gitlab.com/`,
 			host:     "https://gitlab.com",
 			expected: "other",
+		},
+		{
+			credentials:        `https://user:other@gitlab.com/`,
+			host:               "https://github.com",
+			expected:           "",
+			expectedErr:        true,
+			expectedErrMessage: "Error: unable to locate a token for https://github.com",
 		},
 	}
 
@@ -63,15 +73,26 @@ https://user:other@gitlab.com/`,
 			cmd.Path = file.Name()
 			cmd.Host = tc.host
 
-			b := bytes.NewBufferString("")
-			u.SetOut(b)
+			stdout := bytes.NewBufferString("")
+			u.SetOut(stdout)
+
+			stderr := bytes.NewBufferString("")
+			u.SetErr(stderr)
 
 			err = u.Execute()
-			assert.NoError(t, err)
+			if tc.expectedErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+			}
 
-			out, err := io.ReadAll(b)
+			actualOut, err := io.ReadAll(stdout)
 			assert.NoError(t, err)
-			assert.Equal(t, tc.expected, string(out))
+			assert.Equal(t, tc.expected, string(actualOut))
+
+			actualErr, err := io.ReadAll(stderr)
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedErrMessage, strings.TrimSpace(string(actualErr)))
 		})
 	}
 }
