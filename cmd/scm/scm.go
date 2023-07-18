@@ -6,12 +6,8 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/garethjevans/inspect/pkg/util"
-
-	"github.com/garethjevans/inspect/pkg/cmd"
-
-	"github.com/garethjevans/inspect/pkg/version"
-
+	"github.com/garethjevans/scm/pkg/cmd"
+	"github.com/garethjevans/scm/pkg/version"
 	"github.com/sirupsen/logrus"
 
 	"github.com/spf13/cobra/doc"
@@ -60,9 +56,6 @@ func init() {
 
 	RootCmd.PersistentFlags().Bool("help", false, "Show help for command")
 	RootCmd.PersistentFlags().BoolVarP(&Verbose, "debug", "v", false, "Debug Output")
-	RootCmd.PersistentFlags().BoolVarP(&Raw, "raw", "r", false, "Display all tables in raw format")
-	RootCmd.PersistentFlags().BoolVarP(&NoHeaders, "no-headers", "", false, "Do not display table headers")
-	RootCmd.PersistentFlags().BoolVarP(&Markdown, "markdown", "m", false, "Display all tables in Markdown format")
 
 	RootCmd.Flags().Bool("version", false, "Show version")
 
@@ -73,29 +66,11 @@ func init() {
 		return &FlagError{Err: err}
 	})
 
-	RootCmd.AddCommand(cmd.NewImageCmd())
-	RootCmd.AddCommand(cmd.NewBuildArgsCmd())
-	RootCmd.AddCommand(cmd.NewLabelsCmd())
-	RootCmd.AddCommand(cmd.NewDiffCmd())
-	RootCmd.AddCommand(cmd.NewCheckCmd())
-	RootCmd.AddCommand(cmd.NewClusterCmd())
-	RootCmd.AddCommand(cmd.NewDiffNamespaceCmd())
+	RootCmd.AddCommand(cmd.NewUrlCmd())
 
 	RootCmd.PersistentPreRun = func(command *cobra.Command, args []string) {
 		if Verbose {
 			logrus.SetLevel(logrus.DebugLevel)
-		}
-
-		if Raw {
-			cmd.Raw()
-		}
-
-		if NoHeaders {
-			cmd.DisableHeaders()
-		}
-
-		if Markdown {
-			cmd.EnableMarkdown()
 		}
 	}
 
@@ -121,9 +96,9 @@ func (fe FlagError) Unwrap() error {
 
 // RootCmd is the entry point of command-line execution.
 var RootCmd = &cobra.Command{
-	Use:   "inspect",
-	Short: "inspect a docker image",
-	Long:  `a simple CLI to inspect a docker image and try and determine the origin of the container`,
+	Use:   "scm",
+	Short: "provides commands for interacting with different scm providers",
+	Long:  `a CLI used to interact with different scm providers`,
 
 	SilenceErrors: false,
 	SilenceUsage:  false,
@@ -193,7 +168,6 @@ Homebrew, see <https://docs.brew.sh/Shell-Completion>
 }
 
 func main() {
-	logrus.SetFormatter(util.NewTextFormat())
 	if err := RootCmd.Execute(); err != nil {
 		os.Exit(1)
 	}

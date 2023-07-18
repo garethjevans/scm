@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    tekton.dev/git-0: https://gitlab.com
+  name: git-ssh2
+  namespace: dev
+stringData:
+  password: a-random-password
+  username: a-username
+type: kubernetes.io/basic-auth
