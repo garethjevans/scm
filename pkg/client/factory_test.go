@@ -2,10 +2,11 @@ package client_test
 
 import (
 	"context"
+	"testing"
+
 	"github.com/garethjevans/scm/pkg/client"
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestFromRepoURL(t *testing.T) {

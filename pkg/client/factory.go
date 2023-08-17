@@ -2,10 +2,11 @@ package client
 
 import (
 	"fmt"
-	"github.com/jenkins-x/go-scm/scm"
-	"github.com/jenkins-x/go-scm/scm/factory"
 	"net/url"
 	"strings"
+
+	"github.com/jenkins-x/go-scm/scm"
+	"github.com/jenkins-x/go-scm/scm/factory"
 )
 
 // FromRepoURL parses a URL of the form https://:authtoken@host/ and attempts to
@@ -47,7 +48,7 @@ func FromRepoURL(repoURL string, credentials string) (*scm.Client, string, error
 	return client, auth, err
 }
 
-func DetermineToken(credentials string, repositoryUrl string) (string, error) {
+func DetermineToken(credentials string, repositoryURL string) (string, error) {
 	lines := strings.Split(credentials, "\n")
 	for _, line := range lines {
 		u, err := url.Parse(strings.TrimSpace(line))
@@ -55,7 +56,7 @@ func DetermineToken(credentials string, repositoryUrl string) (string, error) {
 			return "", err
 		}
 
-		h, err := url.Parse(repositoryUrl)
+		h, err := url.Parse(repositoryURL)
 		if err != nil {
 			return "", err
 		}
@@ -70,5 +71,5 @@ func DetermineToken(credentials string, repositoryUrl string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("unable to locate a token for %s", repositoryUrl)
+	return "", fmt.Errorf("unable to locate a token for %s", repositoryURL)
 }

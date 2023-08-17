@@ -3,6 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"os"
+	"strings"
+	"time"
+
 	"github.com/garethjevans/scm/pkg/client"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
@@ -10,34 +15,25 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/pkg/errors"
-	"net/url"
-	"os"
-	"strings"
-	"time"
 
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/spf13/cobra"
 )
 
-// $ scm pr --host=https://github.com --owner=garethjevans --repo=my-repo
-//https://github.com/garethjevans/my-repo
-//
-//$ scm url --host=https://dev.azure.com --owner=garethjevans --repo=my-repo
-//https://dev.azure.com/garethjevans/_git/my-repo
-
 var (
 	CommitBranch string
 	BaseBranch   string
 	PrTitle      string
+	CommitTitle  string
 	GitUser      string
 	GitEmail     string
 )
 
-// NewPrCreateCmd creates a pr_create command
+// NewPrCreateCmd creates a pr_create command.
 func NewPrCreateCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "create",
-		Short:        "Creates a PR/MR from the local changes",
+		Short:        "Commits and pushes any local changes, if the base & commit branches are different, then a PR/MR will be created.",
 		Long:         "",
 		Example:      "scm pr create --commit-branch update .git-credentials",
 		Aliases:      []string{"c"},
@@ -49,13 +45,13 @@ func NewPrCreateCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&Path, "path", "p", "", "The path to the git-credentials file")
 	cmd.Flags().StringVarP(&CommitBranch, "commit-branch", "", "", "The branch to push the commits to")
 	cmd.Flags().StringVarP(&BaseBranch, "base-branch", "", "main", "The branch to target the PR to")
+	cmd.Flags().StringVarP(&CommitTitle, "commit-title", "", "", "The title of any commits to push")
 	cmd.Flags().StringVarP(&PrTitle, "pr-title", "", "", "The title of the PR/MR to create")
 	cmd.Flags().StringVarP(&GitUser, "git-user", "", "", "The author of any git commits")
 	cmd.Flags().StringVarP(&GitEmail, "git-email", "", "", "The author of any git commits")
 
 	_ = cmd.MarkFlagRequired("path")
 	_ = cmd.MarkFlagRequired("commit-branch")
-	_ = cmd.MarkFlagRequired("pr-title")
 	_ = cmd.MarkFlagRequired("git-user")
 	_ = cmd.MarkFlagRequired("git-email")
 
@@ -75,16 +71,14 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 
 	repositoryURL := origin.Config().URLs[0]
 
-	fmt.Printf("[DEBUG] %s\n", repositoryURL)
+	fmt.Printf("[DEBUG] Determined repository remote URL as: %s\n", repositoryURL)
 
 	scmClient, token, err := GetScmClient(repositoryURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create scm client")
 	}
 
-	fmt.Printf("[DEBUG] Got scm client %+v\n", scmClient)
-
-	//ctx := context.Background()
+	fmt.Printf("[DEBUG] Got an scm client talking to: %s\n", scmClient.BaseURL)
 
 	workTree, err := repository.Worktree()
 	if err != nil {
@@ -96,7 +90,7 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 		return errors.Wrapf(err, "unable to access status")
 	}
 
-	fmt.Printf("[DEBUG] isClean %t\n%+v", status.IsClean(), status)
+	fmt.Printf("[DEBUG] Ensure we are working on branch %s\n", CommitBranch)
 
 	err = workTree.Checkout(&git.CheckoutOptions{
 		Create: true,
@@ -115,12 +109,13 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 	}
 
 	if !status.IsClean() {
+		fmt.Printf("[DEBUG] There are local changes that we need to commit\n")
 		err = workTree.AddGlob("**")
 		if err != nil {
 			return errors.Wrapf(err, "unable to add files")
 		}
 
-		hash, err := workTree.Commit(PrTitle, &git.CommitOptions{
+		hash, err := workTree.Commit(CommitTitle, &git.CommitOptions{
 			AllowEmptyCommits: false,
 			Author: &object.Signature{
 				Name:  GitUser,
@@ -161,50 +156,49 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	fullName := strings.TrimPrefix(r.Path, "/")
+	fullName := strings.TrimPrefix(strings.TrimSuffix(r.Path, ".git"), "/")
 
-	fmt.Printf("[DEBUG] fullName %+v\n", fullName)
+	if CommitBranch != BaseBranch {
+		ctx := context.Background()
 
-	ctx := context.Background()
+		exists, prNumber, prURL := existingPr(ctx, CommitBranch, BaseBranch, scmClient, fullName)
 
-	exists, prNumber := existingPr(ctx, CommitBranch, BaseBranch, scmClient, fullName)
+		if exists {
+			fmt.Printf("[DEBUG] nothing to do, PR-%d already exists at url %s\n", prNumber, prURL)
+		} else {
+			pullRequestInput := &scm.PullRequestInput{
+				Title: PrTitle,
+				Body:  "",
+				Head:  CommitBranch,
+				Base:  BaseBranch,
+			}
 
-	if exists {
-		fmt.Printf("[DEBUG] nothing to do, PR-%d already exists\n", prNumber)
-	} else {
-		pullRequestInput := &scm.PullRequestInput{
-			Title: PrTitle,
-			Body:  "",
-			Head:  CommitBranch,
-			Base:  BaseBranch,
+			res, _, err := scmClient.PullRequests.Create(ctx, fullName, pullRequestInput)
+			if err != nil {
+				return errors.Wrapf(err, "failed to create a pull request in the repository '%s' with the title '%s'", r.Path, PrTitle)
+			}
+
+			fmt.Printf("[DEBUG] PR-%d created at url %s\n", res.Number, res.Link)
 		}
-
-		res, _, err := scmClient.PullRequests.Create(ctx, fullName, pullRequestInput)
-		if err != nil {
-			return errors.Wrapf(err, "failed to create a pull request in the repository '%s' with the title '%s'", r.Path, PrTitle)
-		}
-
-		fmt.Printf("[DEBUG] res %+v\n", res)
 	}
-
 	return nil
 }
 
-func GetScmClient(repoUrl string) (*scm.Client, string, error) {
+func GetScmClient(repositoryURL string) (*scm.Client, string, error) {
 	b, err := os.ReadFile(Path)
 	if err != nil {
 		return nil, "", err
 	}
 
-	scmClient, token, err := client.FromRepoURL(repoUrl, string(b))
-	return scmClient, token, nil
+	scmClient, token, err := client.FromRepoURL(repositoryURL, string(b))
+	return scmClient, token, err
 }
 
-func existingPr(ctx context.Context, head string, base string, scmClient *scm.Client, fullName string) (bool, int) {
+func existingPr(ctx context.Context, head string, base string, scmClient *scm.Client, fullName string) (bool, int, string) {
 	return FindOpenPullRequestByBranches(ctx, head, base, scmClient, fullName)
 }
 
-func FindOpenPullRequestByBranches(ctx context.Context, head string, base string, scmClient *scm.Client, fullName string) (bool, int) {
+func FindOpenPullRequestByBranches(ctx context.Context, head string, base string, scmClient *scm.Client, fullName string) (bool, int, string) {
 	var openPullRequests []*scm.PullRequest
 	page := 1
 
@@ -214,7 +208,7 @@ func FindOpenPullRequestByBranches(ctx context.Context, head string, base string
 		foundOpenPullRequests, _, err := scmClient.PullRequests.List(ctx, fullName, &pullRequestListOptions)
 		if err != nil {
 			fmt.Printf("[WARN] listing pull requests in repo '%s' failed: %s", fullName, err)
-			return false, 0
+			return false, 0, ""
 		}
 
 		if len(foundOpenPullRequests) == 0 {
@@ -228,9 +222,9 @@ func FindOpenPullRequestByBranches(ctx context.Context, head string, base string
 
 	for _, openPullRequest := range openPullRequests {
 		if openPullRequest.Head.Ref == head && openPullRequest.Base.Ref == base {
-			return true, openPullRequest.Number
+			return true, openPullRequest.Number, openPullRequest.Link
 		}
 	}
 
-	return false, 0
+	return false, 0, ""
 }
