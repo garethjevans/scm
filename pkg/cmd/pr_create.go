@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"github.com/garethjevans/scm/pkg/client"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/pkg/errors"
@@ -134,14 +136,38 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 			return errors.Wrapf(err, "unable to create repository commit")
 		}
 		fmt.Printf("[DEBUG] obj %+v\n", obj)
+
+		// push using default options
+		err = repository.Push(&git.PushOptions{
+			RemoteName: "origin",
+			RefSpecs:   []config.RefSpec{config.RefSpec("refs/for/" + CommitBranch)},
+		})
+		if err != nil {
+			return errors.Wrapf(err, "unable to push to remote repository")
+		}
 	}
 
-	//pullRequestInput := &scm.PullRequestInput{
-	//	Title: o.Title,
-	//	Body:  o.Body,
-	//	Head:  o.Head,
-	//	Base:  o.Base,
-	//}
+	// if a PR already exists for this branch we should skip as this is being updated
+
+	pullRequestInput := &scm.PullRequestInput{
+		Title: PrTitle,
+		Body:  "",
+		Head:  CommitBranch,
+		Base:  BaseBranch,
+	}
+
+	r, err := url.Parse(repositoryURL)
+	if err != nil {
+		return err
+	}
+
+	ctx := context.Background()
+	res, _, err := scmClient.PullRequests.Create(ctx, r.Path, pullRequestInput)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create a pull request in the repository '%s' with the title '%s'", r.Path, PrTitle)
+	}
+
+	fmt.Printf("[DEBUG] res %+v\n", res)
 
 	// shouldUpdate, existingPullRequestNumber := updateNecessary(ctx, o.Head, o.Base, o.AllowUpdate, scmClient, fullName)
 
