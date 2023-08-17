@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"github.com/garethjevans/scm/pkg/client"
 	"github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/pkg/errors"
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/spf13/cobra"
@@ -23,6 +26,8 @@ var (
 	CommitBranch string
 	BaseBranch   string
 	PrTitle      string
+	GitUser      string
+	GitEmail     string
 )
 
 // NewPrCreateCmd creates a pr_create command
@@ -42,9 +47,14 @@ func NewPrCreateCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&CommitBranch, "commit-branch", "", "", "The branch to push the commits to")
 	cmd.Flags().StringVarP(&BaseBranch, "base-branch", "", "main", "The branch to target the PR to")
 	cmd.Flags().StringVarP(&PrTitle, "pr-title", "", "", "The title of the PR/MR to create")
+	cmd.Flags().StringVarP(&GitUser, "git-user", "", "", "The author of any git commits")
+	cmd.Flags().StringVarP(&GitEmail, "git-email", "", "", "The author of any git commits")
 
-	//_ = cmd.MarkFlagRequired("path")
-	//_ = cmd.MarkFlagRequired("repository")
+	_ = cmd.MarkFlagRequired("path")
+	_ = cmd.MarkFlagRequired("commit-branch")
+	_ = cmd.MarkFlagRequired("pr-title")
+	_ = cmd.MarkFlagRequired("git-user")
+	_ = cmd.MarkFlagRequired("git-email")
 
 	return cmd
 }
@@ -82,7 +92,24 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return errors.Wrapf(err, "unable to access status")
 	}
+
 	fmt.Printf("[DEBUG] isClean %t\n%+v", status.IsClean(), status)
+
+	err = workTree.Checkout(&git.CheckoutOptions{
+		Create: true,
+		Branch: plumbing.NewBranchReferenceName(CommitBranch),
+		Keep:   true,
+	})
+	if err != nil {
+		err = workTree.Checkout(&git.CheckoutOptions{
+			Create: false,
+			Branch: plumbing.NewBranchReferenceName(CommitBranch),
+			Keep:   true,
+		})
+		if err != nil {
+			return errors.Wrapf(err, "unable to checkout branch %s", CommitBranch)
+		}
+	}
 
 	if !status.IsClean() {
 		err = workTree.AddGlob("**")
@@ -90,7 +117,23 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 			return errors.Wrapf(err, "unable to add files")
 		}
 
-		workTree.Commit(PrTitle, &git.CommitOptions{})
+		hash, err := workTree.Commit(PrTitle, &git.CommitOptions{
+			AllowEmptyCommits: false,
+			Author: &object.Signature{
+				Name:  GitUser,
+				Email: GitEmail,
+				When:  time.Now(),
+			},
+		})
+		if err != nil {
+			return errors.Wrapf(err, "unable to create commit")
+		}
+
+		obj, err := repository.CommitObject(hash)
+		if err != nil {
+			return errors.Wrapf(err, "unable to create repository commit")
+		}
+		fmt.Printf("[DEBUG] obj %+v\n", obj)
 	}
 
 	//pullRequestInput := &scm.PullRequestInput{

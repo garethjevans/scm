@@ -20,7 +20,7 @@ func FromRepoURL(repoURL string, credentials string) (*scm.Client, error) {
 	if password, ok := u.User.Password(); ok {
 		auth = password
 	} else {
-		fmt.Println("Token is not available from the url, falling back to .git-credentials")
+		fmt.Println("[DEBUG] Token is not available from the url, falling back to .git-credentials")
 		token, err := DetermineToken(credentials, repoURL)
 		if err != nil {
 			return nil, err
