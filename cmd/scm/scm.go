@@ -68,6 +68,7 @@ func init() {
 
 	RootCmd.AddCommand(cmd.NewURLCmd())
 	RootCmd.AddCommand(cmd.NewTokenCmd())
+	RootCmd.AddCommand(cmd.NewPrCmd())
 
 	RootCmd.PersistentPreRun = func(command *cobra.Command, args []string) {
 		if Verbose {

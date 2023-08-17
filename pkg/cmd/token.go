@@ -15,10 +15,6 @@ import (
 //$ scm url --host=https://dev.azure.com --owner=garethjevans --repo=my-repo
 //https://dev.azure.com/garethjevans/_git/my-repo
 
-var (
-	Path string
-)
-
 // NewTokenCmd creates a new token command.
 func NewTokenCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -65,10 +61,6 @@ func DetermineToken(credentials string, kind string, host string, owner string, 
 			if err != nil {
 				return "", err
 			}
-
-			//if u.Path != "" {
-			//	fmt.Println("[DEBUG] we have a path: " + u.Path)
-			//}
 
 			if h.Host == u.Host {
 				// we have found a host that matches
