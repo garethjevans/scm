@@ -144,7 +144,7 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 			Progress:   os.Stdout,
 			RefSpecs:   []config.RefSpec{config.RefSpec("refs/tags/*:refs/tags/*")},
 			Auth: &http.BasicAuth{
-				Username: "",
+				Username: "garethjevans",
 				Password: token,
 			},
 		})
