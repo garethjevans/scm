@@ -10,10 +10,10 @@ import (
 
 // FromRepoURL parses a URL of the form https://:authtoken@host/ and attempts to
 // determine the driver and creates a client to authenticate to the endpoint.
-func FromRepoURL(repoURL string, credentials string) (*scm.Client, error) {
+func FromRepoURL(repoURL string, credentials string) (*scm.Client, string, error) {
 	u, err := url.Parse(repoURL)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	auth := ""
@@ -23,7 +23,7 @@ func FromRepoURL(repoURL string, credentials string) (*scm.Client, error) {
 		fmt.Println("[DEBUG] Token is not available from the url, falling back to .git-credentials")
 		token, err := DetermineToken(credentials, repoURL)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 		auth = token
 	}
@@ -37,12 +37,14 @@ func FromRepoURL(repoURL string, credentials string) (*scm.Client, error) {
 
 	driver, err := identifier.Identify(u.Host)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	u.Path = "/"
 	u.User = nil
-	return factory.NewClient(driver, u.String(), auth)
+
+	client, err := factory.NewClient(driver, u.String(), auth)
+	return client, auth, err
 }
 
 func DetermineToken(credentials string, repositoryUrl string) (string, error) {

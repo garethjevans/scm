@@ -8,6 +8,7 @@ import (
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
+	"github.com/go-git/go-git/v5/plumbing/transport/http"
 	"github.com/pkg/errors"
 	"net/url"
 	"os"
@@ -76,7 +77,7 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("[DEBUG] %s\n", repositoryURL)
 
-	scmClient, err := GetScmClient(repositoryURL)
+	scmClient, token, err := GetScmClient(repositoryURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create scm client")
 	}
@@ -142,6 +143,10 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 			RemoteName: "origin",
 			Progress:   os.Stdout,
 			RefSpecs:   []config.RefSpec{config.RefSpec("refs/tags/*:refs/tags/*")},
+			Auth: &http.BasicAuth{
+				Username: "",
+				Password: token,
+			},
 		})
 		if err != nil {
 			return errors.Wrapf(err, "unable to push to remote repository")
@@ -193,14 +198,14 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func GetScmClient(repoUrl string) (*scm.Client, error) {
+func GetScmClient(repoUrl string) (*scm.Client, string, error) {
 	b, err := os.ReadFile(Path)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	scmClient, err := client.FromRepoURL(repoUrl, string(b))
-	return scmClient, nil
+	scmClient, token, err := client.FromRepoURL(repoUrl, string(b))
+	return scmClient, token, nil
 }
 
 func DeterminePr(credentials string, kind string, host string, owner string, repo string) (string, error) {
