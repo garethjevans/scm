@@ -21,12 +21,15 @@ import (
 )
 
 var (
-	CommitBranch string
-	BaseBranch   string
-	PrTitle      string
-	CommitTitle  string
-	GitUser      string
-	GitEmail     string
+	CommitBranch   string
+	BaseBranch     string
+	PrTitle        string
+	CommitTitle    string
+	GitUser        string
+	GitEmail       string
+	OutputGitSha   string
+	OutputPrNumber string
+	OutputPrURL    string
 )
 
 // NewPrCreateCmd creates a pr_create command.
@@ -50,6 +53,11 @@ func NewPrCreateCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&GitUser, "git-user", "", "", "The author of any git commits")
 	cmd.Flags().StringVarP(&GitEmail, "git-email", "", "", "The author of any git commits")
 	cmd.Flags().StringVarP(&Kind, "kind", "", "", "In case we are unable to determine the type of scm server, this can provide hints")
+
+	// output flags
+	cmd.Flags().StringVarP(&OutputGitSha, "output-git-sha", "", "", "The location to write the git sha to")
+	cmd.Flags().StringVarP(&OutputPrNumber, "output-pr-number", "", "", "The location to write the pr number to")
+	cmd.Flags().StringVarP(&OutputPrURL, "output-pr-url", "", "", "The location to write the pr url to")
 
 	_ = cmd.MarkFlagRequired("path")
 	_ = cmd.MarkFlagRequired("commit-branch")
@@ -128,11 +136,18 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 			return errors.Wrapf(err, "unable to create commit")
 		}
 
+		if OutputGitSha != "" {
+			err = writeToFile(hash.String(), OutputGitSha)
+			if err != nil {
+				return err
+			}
+		}
+
 		obj, err := repository.CommitObject(hash)
 		if err != nil {
 			return errors.Wrapf(err, "unable to create repository commit")
 		}
-		fmt.Printf("[DEBUG] obj %+v\n", obj)
+		fmt.Printf("[DEBUG] %+v\n", obj)
 
 		// push using default options
 		err = repository.Push(&git.PushOptions{
@@ -166,6 +181,18 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 
 		if exists {
 			fmt.Printf("[DEBUG] nothing to do, PR-%d already exists at url %s\n", prNumber, prURL)
+			if OutputPrURL != "" {
+				err = writeToFile(prURL, OutputPrURL)
+				if err != nil {
+					return err
+				}
+			}
+			if OutputPrNumber != "" {
+				err = writeToFile(fmt.Sprintf("%d", prNumber), OutputPrNumber)
+				if err != nil {
+					return err
+				}
+			}
 		} else {
 			pullRequestInput := &scm.PullRequestInput{
 				Title: PrTitle,
@@ -180,6 +207,19 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 			}
 
 			fmt.Printf("[DEBUG] PR-%d created at url %s\n", res.Number, res.Link)
+
+			if OutputPrURL != "" {
+				err = writeToFile(res.Link, OutputPrURL)
+				if err != nil {
+					return err
+				}
+			}
+			if OutputPrNumber != "" {
+				err = writeToFile(fmt.Sprintf("%d", res.Number), OutputPrNumber)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 	return nil
@@ -197,6 +237,10 @@ func GetScmClient(repositoryURL string) (*scm.Client, string, string, error) {
 
 func existingPr(ctx context.Context, head string, base string, scmClient *scm.Client, fullName string) (bool, int, string) {
 	return FindOpenPullRequestByBranches(ctx, head, base, scmClient, fullName)
+}
+
+func writeToFile(data string, path string) error {
+	return os.WriteFile(path, []byte(data), 0600)
 }
 
 func FindOpenPullRequestByBranches(ctx context.Context, head string, base string, scmClient *scm.Client, fullName string) (bool, int, string) {
