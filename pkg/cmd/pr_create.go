@@ -49,6 +49,7 @@ func NewPrCreateCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&PrTitle, "pr-title", "", "", "The title of the PR/MR to create")
 	cmd.Flags().StringVarP(&GitUser, "git-user", "", "", "The author of any git commits")
 	cmd.Flags().StringVarP(&GitEmail, "git-email", "", "", "The author of any git commits")
+	cmd.Flags().StringVarP(&Kind, "kind", "", "", "In case we are unable to determine the type of scm server, this can provide hints")
 
 	_ = cmd.MarkFlagRequired("path")
 	_ = cmd.MarkFlagRequired("commit-branch")
@@ -73,7 +74,7 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("[DEBUG] Determined repository remote URL as: %s\n", repositoryURL)
 
-	scmClient, token, err := GetScmClient(repositoryURL)
+	scmClient, username, token, err := GetScmClient(repositoryURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create scm client")
 	}
@@ -141,7 +142,7 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 				config.RefSpec(fmt.Sprintf("+refs/heads/%s:refs/heads/%s", CommitBranch, CommitBranch)),
 			},
 			Auth: &http.BasicAuth{
-				Username: "garethjevans",
+				Username: username,
 				Password: token,
 			},
 		})
@@ -184,14 +185,14 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 	return nil
 }
 
-func GetScmClient(repositoryURL string) (*scm.Client, string, error) {
+func GetScmClient(repositoryURL string) (*scm.Client, string, string, error) {
 	b, err := os.ReadFile(Path)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 
-	scmClient, token, err := client.FromRepoURL(repositoryURL, string(b))
-	return scmClient, token, err
+	scmClient, username, token, err := client.FromRepoURL(repositoryURL, string(b), Kind)
+	return scmClient, username, token, err
 }
 
 func existingPr(ctx context.Context, head string, base string, scmClient *scm.Client, fullName string) (bool, int, string) {

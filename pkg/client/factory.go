@@ -11,22 +11,26 @@ import (
 
 // FromRepoURL parses a URL of the form https://:authtoken@host/ and attempts to
 // determine the driver and creates a client to authenticate to the endpoint.
-func FromRepoURL(repoURL string, credentials string) (*scm.Client, string, error) {
+func FromRepoURL(repoURL string, credentials string, kind string) (*scm.Client, string, string, error) {
 	u, err := url.Parse(repoURL)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 
-	auth := ""
+	var username string
+	var auth string
+
 	if password, ok := u.User.Password(); ok {
 		auth = password
+		username = u.User.Username()
 	} else {
 		fmt.Println("[DEBUG] Token is not available from the url, falling back to .git-credentials")
-		token, err := DetermineToken(credentials, repoURL)
+		user, token, err := DetermineAuth(credentials, repoURL)
 		if err != nil {
-			return nil, "", err
+			return nil, "", "", err
 		}
 		auth = token
+		username = user
 	}
 
 	// these seem to be the most sensible mappings
@@ -36,29 +40,37 @@ func FromRepoURL(repoURL string, credentials string) (*scm.Client, string, error
 		factory.Mapping("fake.com", "fake"),
 	)
 
-	driver, err := identifier.Identify(u.Host)
-	if err != nil {
-		return nil, "", err
+	var driver string
+
+	if kind == "" {
+		driver, err = identifier.Identify(u.Host)
+		if err != nil {
+			return nil, "", "", err
+		}
+	} else {
+		driver = kind
 	}
 
 	u.Path = "/"
 	u.User = nil
 
 	client, err := factory.NewClient(driver, u.String(), auth)
-	return client, auth, err
+	client.Username = username
+
+	return client, username, auth, err
 }
 
-func DetermineToken(credentials string, repositoryURL string) (string, error) {
+func DetermineAuth(credentials string, repositoryURL string) (string, string, error) {
 	lines := strings.Split(credentials, "\n")
 	for _, line := range lines {
 		u, err := url.Parse(strings.TrimSpace(line))
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
 		h, err := url.Parse(repositoryURL)
 		if err != nil {
-			return "", err
+			return "", "", err
 		}
 
 		if h.Host == u.Host {
@@ -66,10 +78,10 @@ func DetermineToken(credentials string, repositoryURL string) (string, error) {
 			password, ok := u.User.Password()
 
 			if ok {
-				return password, nil
+				return u.User.Username(), password, nil
 			}
 		}
 	}
 
-	return "", fmt.Errorf("unable to locate a token for %s", repositoryURL)
+	return "", "", fmt.Errorf("unable to locate a token for %s", repositoryURL)
 }
