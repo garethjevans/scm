@@ -142,7 +142,9 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 		err = repository.Push(&git.PushOptions{
 			RemoteName: "origin",
 			Progress:   os.Stdout,
-			RefSpecs:   []config.RefSpec{config.RefSpec("refs/tags/*:refs/tags/*")},
+			RefSpecs: []config.RefSpec{
+				config.RefSpec(fmt.Sprintf("+refs/heads/%s:refs/heads/%s", CommitBranch, CommitBranch)),
+			},
 			Auth: &http.BasicAuth{
 				Username: "garethjevans",
 				Password: token,
