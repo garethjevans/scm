@@ -169,8 +169,12 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	fullName := strings.TrimPrefix(r.Path, "/")
+
+	fmt.Printf("[DEBUG] fullName %+v\n", fullName)
+
 	ctx := context.Background()
-	res, _, err := scmClient.PullRequests.Create(ctx, r.Path, pullRequestInput)
+	res, _, err := scmClient.PullRequests.Create(ctx, fullName, pullRequestInput)
 	if err != nil {
 		return errors.Wrapf(err, "failed to create a pull request in the repository '%s' with the title '%s'", r.Path, PrTitle)
 	}
