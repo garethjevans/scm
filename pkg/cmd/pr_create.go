@@ -156,14 +156,6 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 	}
 
 	// if a PR already exists for this branch we should skip as this is being updated
-
-	pullRequestInput := &scm.PullRequestInput{
-		Title: PrTitle,
-		Body:  "",
-		Head:  CommitBranch,
-		Base:  BaseBranch,
-	}
-
 	r, err := url.Parse(repositoryURL)
 	if err != nil {
 		return err
@@ -174,32 +166,26 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 	fmt.Printf("[DEBUG] fullName %+v\n", fullName)
 
 	ctx := context.Background()
-	res, _, err := scmClient.PullRequests.Create(ctx, fullName, pullRequestInput)
-	if err != nil {
-		return errors.Wrapf(err, "failed to create a pull request in the repository '%s' with the title '%s'", r.Path, PrTitle)
+
+	exists, prNumber := existingPr(ctx, CommitBranch, BaseBranch, scmClient, fullName)
+
+	if exists {
+		fmt.Printf("[DEBUG] nothing to do, PR-%d already exists\n", prNumber)
+	} else {
+		pullRequestInput := &scm.PullRequestInput{
+			Title: PrTitle,
+			Body:  "",
+			Head:  CommitBranch,
+			Base:  BaseBranch,
+		}
+
+		res, _, err := scmClient.PullRequests.Create(ctx, fullName, pullRequestInput)
+		if err != nil {
+			return errors.Wrapf(err, "failed to create a pull request in the repository '%s' with the title '%s'", r.Path, PrTitle)
+		}
+
+		fmt.Printf("[DEBUG] res %+v\n", res)
 	}
-
-	fmt.Printf("[DEBUG] res %+v\n", res)
-
-	// shouldUpdate, existingPullRequestNumber := updateNecessary(ctx, o.Head, o.Base, o.AllowUpdate, scmClient, fullName)
-
-	//if shouldUpdate {
-	//	res, _, err := scmClient.PullRequests.Update(ctx, fullName, existingPullRequestNumber, pullRequestInput)
-	//	if err != nil {
-	//		return errors.Wrapf(err, "failed to update existing pull request #%d in repo '%s'", existingPullRequestNumber, fullName)
-	//	}
-	//
-	//	log.Logger().Infof("updated pull request #%d in repo '%s'. url: %s", res.Number, res.Base.Repo.FullName, res.Link)
-	//
-	//	return nil
-	//}
-
-	//res, _, err := scmClient.PullRequests.Create(ctx, fullName, pullRequestInput)
-	//if err != nil {
-	//	return errors.Wrapf(err, "failed to create a pull request in the repository '%s' with the title '%s'", fullName, o.Title)
-	//}
-	//
-	//log.Logger().Infof("created pull request #%d in repo '%s'. url: %s", res.Number, res.Base.Repo.FullName, res.Link)
 
 	return nil
 }
@@ -214,80 +200,37 @@ func GetScmClient(repoUrl string) (*scm.Client, string, error) {
 	return scmClient, token, nil
 }
 
-func DeterminePr(credentials string, kind string, host string, owner string, repo string) (string, error) {
-	lines := strings.Split(credentials, "\n")
-	for _, line := range lines {
-		u, err := url.Parse(strings.TrimSpace(line))
+func existingPr(ctx context.Context, head string, base string, scmClient *scm.Client, fullName string) (bool, int) {
+	return FindOpenPullRequestByBranches(ctx, head, base, scmClient, fullName)
+}
+
+func FindOpenPullRequestByBranches(ctx context.Context, head string, base string, scmClient *scm.Client, fullName string) (bool, int) {
+	var openPullRequests []*scm.PullRequest
+	page := 1
+
+	for {
+		pullRequestListOptions := scm.PullRequestListOptions{Page: page, Size: 10, Open: true, Closed: false}
+
+		foundOpenPullRequests, _, err := scmClient.PullRequests.List(ctx, fullName, &pullRequestListOptions)
 		if err != nil {
-			return "", err
+			fmt.Printf("[WARN] listing pull requests in repo '%s' failed: %s", fullName, err)
+			return false, 0
 		}
 
-		if host != "" {
-			h, err := url.Parse(GetURL(kind, host, owner, repo))
-			if err != nil {
-				return "", err
-			}
+		if len(foundOpenPullRequests) == 0 {
+			break
+		}
 
-			//if u.Path != "" {
-			//	fmt.Println("[DEBUG] we have a path: " + u.Path)
-			//}
+		openPullRequests = append(openPullRequests, foundOpenPullRequests...)
 
-			if h.Host == u.Host {
-				// we have found a host that matches
-				password, ok := u.User.Password()
+		page++
+	}
 
-				if ok {
-					return password, nil
-				}
-			}
-		} else {
-			// get the first in the list if no host is specified
-			password, ok := u.User.Password()
-
-			if ok {
-				return password, nil
-			}
+	for _, openPullRequest := range openPullRequests {
+		if openPullRequest.Head.Ref == head && openPullRequest.Base.Ref == base {
+			return true, openPullRequest.Number
 		}
 	}
 
-	return "", fmt.Errorf("unable to locate a token for %s", host)
+	return false, 0
 }
-
-//func updateNecessary(ctx context.Context, head string, base string, updateAllowed bool, scmClient *scm.Client, fullName string) (bool, int) {
-//	if !updateAllowed {
-//		return false, 0
-//	}
-//
-//	return FindOpenPullRequestByBranches(ctx, head, base, scmClient, fullName)
-//}
-
-//func FindOpenPullRequestByBranches(ctx context.Context, head string, base string, scmClient *scm.Client, fullName string) (bool, int) {
-//	var openPullRequests []*scm.PullRequest
-//	page := 1
-//
-//	for {
-//		pullRequestListOptions := scm.PullRequestListOptions{Page: page, Size: 10, Open: true, Closed: false}
-//
-//		foundOpenPullRequests, _, err := scmClient.PullRequests.List(ctx, fullName, &pullRequestListOptions)
-//		if err != nil {
-//			log.Logger().Errorf("listing pull requests in repo '%s' failed: %s", fullName, err)
-//			return false, 0
-//		}
-//
-//		if len(foundOpenPullRequests) == 0 {
-//			break
-//		}
-//
-//		openPullRequests = append(openPullRequests, foundOpenPullRequests...)
-//
-//		page++
-//	}
-//
-//	for _, openPullRequest := range openPullRequests {
-//		if openPullRequest.Head.Ref == head && openPullRequest.Base.Ref == base {
-//			return true, openPullRequest.Number
-//		}
-//	}
-//
-//	return false, 0
-//}
