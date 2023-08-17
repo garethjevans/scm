@@ -140,7 +140,8 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 		// push using default options
 		err = repository.Push(&git.PushOptions{
 			RemoteName: "origin",
-			RefSpecs:   []config.RefSpec{config.RefSpec("refs/for/" + CommitBranch)},
+			Progress:   os.Stdout,
+			RefSpecs:   []config.RefSpec{config.RefSpec("refs/tags/*:refs/tags/*")},
 		})
 		if err != nil {
 			return errors.Wrapf(err, "unable to push to remote repository")
