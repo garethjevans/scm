@@ -3,12 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"os"
-	"strings"
 )
 
 var (

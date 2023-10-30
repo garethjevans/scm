@@ -2,9 +2,10 @@ package client
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"net/url"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 
 	"github.com/jenkins-x/go-scm/scm"
 	"github.com/jenkins-x/go-scm/scm/factory"
