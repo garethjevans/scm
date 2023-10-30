@@ -50,8 +50,8 @@ github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
-github.com/jenkins-x/go-scm v1.14.14 h1:a4c3z4+FVPMWMl59hgdLZNbnbc0Z0/Ln6fHXS0hLAyY=
-github.com/jenkins-x/go-scm v1.14.14/go.mod h1:MR/WVGUSEqED4SP/lWaRKtks/vYGtylFueDr1FLogYg=
+github.com/jenkins-x/go-scm v1.14.15 h1:M1G0rd0k3/67BFO5MvBW+Xgg/XQQu/QUvpBLjSA93jU=
+github.com/jenkins-x/go-scm v1.14.15/go.mod h1:x4uN9wc9lUQt32QerLOWBwf1eutta0uVdizk5fES+JI=
 github.com/kevinburke/ssh_config v1.2.0 h1:x584FjTGwHzMwvHx18PXxbBVzfnxogHaAReU4gf13a4=
 github.com/kevinburke/ssh_config v1.2.0/go.mod h1:CT57kijsi8u/K/BOFA39wgDQJ9CxiF4nAY/ojJ6r6mM=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
