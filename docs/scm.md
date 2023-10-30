@@ -16,6 +16,7 @@ a CLI used to interact with different scm providers
 
 ### SEE ALSO
 
+* [scm monorepo-change](scm_monorepo-change.md)	 - Determines the sha to clone for the supplied path on the monorepository
 * [scm pr](scm_pr.md)	 - 
 * [scm token](scm_token.md)	 - Determines the token to use for an scm provider
 * [scm url](scm_url.md)	 - Calculates the url for an scm provider

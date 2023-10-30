@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 	"net/url"
 	"strings"
 
@@ -24,11 +25,12 @@ func FromRepoURL(repoURL string, credentials string, kind string) (*scm.Client, 
 		auth = password
 		username = u.User.Username()
 	} else {
-		fmt.Println("[DEBUG] Token is not available from the url, falling back to .git-credentials")
+		logrus.Debugf("Token is not available from the url, falling back to .git-credentials")
 		user, token, err := DetermineAuth(credentials, repoURL)
 		if err != nil {
 			return nil, "", "", err
 		}
+		logrus.Debugf("Got auth from .git-credentials")
 		auth = token
 		username = user
 	}
