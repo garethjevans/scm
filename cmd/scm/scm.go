@@ -70,6 +70,7 @@ func init() {
 	RootCmd.AddCommand(cmd.NewTokenCmd())
 	RootCmd.AddCommand(cmd.NewPrCmd())
 	RootCmd.AddCommand(cmd.NewMonoRepoChangeCmd())
+	RootCmd.AddCommand(cmd.NewCheckRunCmd())
 
 	RootCmd.PersistentPreRun = func(command *cobra.Command, args []string) {
 		if Verbose {
