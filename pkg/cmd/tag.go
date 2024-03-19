@@ -78,7 +78,7 @@ func Tag(cmd *cobra.Command, args []string) error {
 	fullName := strings.TrimPrefix(strings.TrimSuffix(r.Path, ".git"), "/")
 
 	ctx := context.Background()
-	_, _, err = scmClient.Git.CreateRef(ctx, fullName, Ref, Sha)
+	_, _, err = scmClient.Git.CreateRef(ctx, fullName, fmt.Sprintf("refs/tags/%s", Ref), Sha)
 	if err != nil {
 		return err
 	}
