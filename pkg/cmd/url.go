@@ -7,10 +7,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	Kind string
-)
-
 // NewURLCmd creates a new cluster command.
 func NewURLCmd() *cobra.Command {
 	cmd := &cobra.Command{

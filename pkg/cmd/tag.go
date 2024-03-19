@@ -36,6 +36,8 @@ func NewTagCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&Ref, "tag", "t", "", "The tag to apply")
 	cmd.Flags().StringVarP(&Repository, "repository", "r", "", "The full https url of the repository")
 
+	cmd.Flags().StringVarP(&Kind, "kind", "k", "", "The kind of the scm provider")
+
 	_ = cmd.MarkFlagRequired("path")
 	_ = cmd.MarkFlagRequired("sha")
 	_ = cmd.MarkFlagRequired("tag")

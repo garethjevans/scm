@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/garethjevans/scm/pkg/client"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -223,16 +222,6 @@ func CreatePullRequest(cmd *cobra.Command, args []string) error {
 		}
 	}
 	return nil
-}
-
-func GetScmClient(repositoryURL string) (*scm.Client, string, string, error) {
-	b, err := os.ReadFile(Path)
-	if err != nil {
-		return nil, "", "", err
-	}
-
-	scmClient, username, token, err := client.FromRepoURL(repositoryURL, string(b), Kind)
-	return scmClient, username, token, err
 }
 
 func existingPr(ctx context.Context, head string, base string, scmClient *scm.Client, fullName string) (bool, int, string) {
