@@ -15,6 +15,7 @@ scm tag --tag 0.0.1 --sha abcdefgabcdefgabcdefgabcdefg --path .git-credentials
 ### Options
 
 ```
+  -k, --kind string         The kind of the scm provider
   -p, --path string         The path to the git-credentials file
   -r, --repository string   The full https url of the repository
   -s, --sha string          The sha to attach the tag to
