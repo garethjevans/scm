@@ -3,10 +3,11 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	"github.com/pkg/errors"
 	"net/url"
 	"strings"
+
+	"github.com/go-git/go-git/v5"
+	"github.com/pkg/errors"
 
 	"github.com/spf13/cobra"
 )
