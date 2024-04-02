@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/go-git/go-git/v5 v5.11.0
-	github.com/jenkins-x/go-scm v1.14.26
+	github.com/jenkins-x/go-scm v1.14.29
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
