@@ -1,10 +1,11 @@
 module github.com/garethjevans/scm
 
 go 1.21
+toolchain go1.22.4
 
 require (
 	github.com/go-git/go-git/v5 v5.12.0
-	github.com/jenkins-x/go-scm v1.14.34
+	github.com/jenkins-x/go-scm v1.14.37
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
