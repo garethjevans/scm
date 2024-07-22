@@ -1,10 +1,11 @@
 module github.com/garethjevans/scm
 
 go 1.21
+toolchain go1.22.5
 
 require (
 	github.com/go-git/go-git/v5 v5.12.0
-	github.com/jenkins-x/go-scm v1.14.34
+	github.com/jenkins-x/go-scm v1.14.39
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
@@ -17,7 +18,7 @@ require (
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/ProtonMail/go-crypto v1.0.0 // indirect
-	github.com/bluekeyes/go-gitdiff v0.7.1 // indirect
+	github.com/bluekeyes/go-gitdiff v0.7.3 // indirect
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
@@ -41,13 +42,13 @@ require (
 	github.com/skeema/knownhosts v1.2.2 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/mod v0.12.0 // indirect
+	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.23.0 // indirect
-	golang.org/x/oauth2 v0.19.0 // indirect
+	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
-	golang.org/x/tools v0.13.0 // indirect
+	golang.org/x/tools v0.18.0 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/apimachinery v0.29.0 // indirect
+	k8s.io/apimachinery v0.30.2 // indirect
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b // indirect
 )
