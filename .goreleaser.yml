@@ -1,7 +1,11 @@
----
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=jcroql
+version: 2
+
 env:
   - GO111MODULE=on
   - CGO_ENABLED=0
+
 before:
   hooks:
     - go mod download
@@ -51,9 +55,6 @@ checksum:
   name_template: "{{ .ProjectName }}-checksums.txt"
   algorithm: sha256
 
-changelog:
-  skip: false
-
 release:
   draft: false
   prerelease: false
@@ -61,12 +62,12 @@ release:
 
 brews:
   - name: scm
-    tap:
+    repository:
       owner: garethjevans
       name: homebrew-tap
       token: "{{ .Env.GITHUB_TOKEN }}"
     commit_author:
       name: garethjevans
       email: gareth@bryncynfelin.co.uk
-    folder: Formula
+    directory: Formula
     description: "Utility to validate a component structure"
