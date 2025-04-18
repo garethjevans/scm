@@ -1,14 +1,11 @@
 ---
-name: goreleaser
+name: goreleaser-test
 
 on:
-  push:
-    tags:
-      - '*'
-
+  pull_request: {}
 
 jobs:
-  goreleaser:
+  goreleaser-test:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -31,6 +28,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v2.4.1
         with:
           version: latest
-          args: release
+          args: release --skip=publish
         env:
           GITHUB_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
