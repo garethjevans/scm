@@ -5,7 +5,7 @@ go 1.23.0
 toolchain go1.24.1
 
 require (
-	github.com/go-git/go-git/v5 v5.16.0
+	github.com/go-git/go-git/v5 v5.16.3
 	github.com/jenkins-x/go-scm v1.14.57
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
